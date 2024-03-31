@@ -34,9 +34,16 @@ class HierarchicalTransformerEncoder(tf.keras.models.Model):
     def call(self, word_level_inputs, character_level_inputs):
         word_embedding_outputs = self.word_pos_embedding(word_level_inputs)
 
-        character_level_inputs = [self.character_pos_embedding(character_level_input)
-                                  for character_level_input in character_level_inputs]
-        character_level_encoder_output = self.character_level_encoder(character_level_inputs)
+        character_level_encoder_outputs = tf.map_fn(
+            lambda x: self.character_pos_embedding(x),
+            character_level_inputs,
+            dtype=tf.float32
+        )
+
+        print(word_level_inputs)
+        print(character_level_inputs)
+
+        character_level_encoder_output = self.character_level_encoder(character_level_encoder_outputs)
 
         concat_output = self.combined_layer([word_embedding_outputs, character_level_encoder_output])
 
@@ -46,3 +53,10 @@ class HierarchicalTransformerEncoder(tf.keras.models.Model):
         detection_output = self.detection_layer(word_level_output)
 
         return correction_output, detection_output
+
+
+def custom_loss(y_true, y_pred):
+    softmax_loss = tf.keras.losses.sparse_categorical_crossentropy(y_true, y_pred[0], from_logits=False)
+    sigmoid_loss = tf.keras.losses.binary_crossentropy(y_true, y_pred[1], from_logits=False)
+    total_loss = softmax_loss + sigmoid_loss
+    return total_loss
