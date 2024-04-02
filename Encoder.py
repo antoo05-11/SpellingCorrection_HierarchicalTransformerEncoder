@@ -23,7 +23,6 @@ class Encoder(tf.keras.layers.Layer):
     def call(self, x):
         # `x` is token-IDs shape: (batch, seq_len)
         # x = self.pos_embedding(x)  # Shape `(batch_size, seq_len, d_model)`.
-        print(1213424, x.shape)
         # Add dropout.
 
         for i in range(self.num_layers):
