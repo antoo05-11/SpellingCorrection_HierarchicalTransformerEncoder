@@ -82,14 +82,25 @@ class HierarchicalTransformerEncoder(tf.keras.models.Model):
         return correction_output, detection_output
 
 
-def custom_loss(y_true, y_pred):
-    print('y_pred shape:', y_pred.shape)
-    print('y_true shape:', y_true.shape)
-    true_outputs, true_detection_infos = y_true[0], y_true[1]
-    pred_outputs, pred_detection_infos = y_pred[0], y_pred[1]
-    print("pred_detect_shape ", pred_detection_infos)
-    print("true_detect_shape ", true_detection_infos)
+@tf.function
+def training_step(model, optimizer, x, y):
+    with tf.GradientTape() as tape:
+        correction_output, detection_output = model(x)
+        loss1 = correction_loss(y[0], correction_output)
+        loss2 = detection_loss(y[1], detection_output)
+        total_loss = loss1 + loss2
+
+    gradients = tape.gradient(total_loss, model.trainable_variables)
+    optimizer.apply_gradients(zip(gradients, model.trainable_variables))
+
+    return total_loss, loss1, loss2
+
+
+def correction_loss(true_outputs, pred_outputs):
     softmax_loss = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=False)(true_outputs, pred_outputs)
+    return softmax_loss
+
+
+def detection_loss(true_detection_infos, pred_detection_infos):
     sigmoid_loss = tf.keras.losses.BinaryCrossentropy(from_logits=False)(true_detection_infos, pred_detection_infos)
-    total_loss = softmax_loss + sigmoid_loss
-    return total_loss
+    return sigmoid_loss
