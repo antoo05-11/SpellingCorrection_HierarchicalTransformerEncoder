@@ -17,4 +17,4 @@ class Config:
         self.MAX_SENTENCE_LENGTH = 40
 
         self.VOCAB_SIZE = 10000
-        self.CHARACTER_VOCAB_SIZE = 1000
+        self.CHARACTER_VOCAB_SIZE = 20000

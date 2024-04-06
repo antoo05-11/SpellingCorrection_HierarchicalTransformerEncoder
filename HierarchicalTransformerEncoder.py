@@ -37,13 +37,13 @@ class HierarchicalTransformerEncoder(tf.keras.models.Model):
                                           dropout_rate=dropout_rate,
                                           name='word_level_encoder')
 
-        self.correction_layer = tf.keras.layers.Dense(vocab_size, activation='softmax', name='correction_layer',)
-        # self.detection_layer = tf.keras.layers.Dense(1, activation='sigmoid')
+        self.correction_layer = tf.keras.layers.Dense(vocab_size, activation='softmax', name='correction_layer', )
+        self.detection_layer = tf.keras.layers.Dense(1, activation='sigmoid', name='detection_layer')
 
     def call(self, inputs):
         (word_level_inputs, sentences_lengths), (character_level_inputs, words_lengths) = inputs
 
-        word_embedding_outputs = self.word_pos_embedding(word_level_inputs)
+        word_embedding_outputs = self.word_pos_embedding(word_level_inputs)  # (batch_size, max_len, word_level_d_model)
         # print("Shape của word_embedding_outputs:", word_embedding_outputs.shape)
 
         character_level_encoder_outputs = tf.map_fn(
@@ -52,6 +52,7 @@ class HierarchicalTransformerEncoder(tf.keras.models.Model):
             (character_level_inputs, words_lengths),
             dtype=tf.float32
         )
+        # (batch_size, max_sen_len, max_word_length, character_level_d_model)
 
         character_level_encoder_outputs = tf.map_fn(
             lambda sentence: tf.map_fn(
@@ -61,30 +62,34 @@ class HierarchicalTransformerEncoder(tf.keras.models.Model):
             ),
             character_level_encoder_outputs,
             dtype=tf.float32)
-
+        # (batch_size, max_sen_len, word_level_d_model)
         # print("Shape của character_level_encoder_outputs:", character_level_encoder_outputs.shape)
 
         concat_output = self.combined_layer([word_embedding_outputs, character_level_encoder_outputs])
+        # (batch_size, max_sen_len, word_level_d_model * 2)
         # print("Shape của concat_output:", concat_output.shape)
 
         word_level_output = self.word_level_encoder((concat_output, sentences_lengths))
+        # (batch_size, max_sen_len, word_level_d_model + character_level_d_model)
         # print("Shape của word_level_output:", word_level_output.shape)
 
-        correction_output = self.correction_layer(word_level_output)
+        correction_output = self.correction_layer(word_level_output)  # (batch_size, max_sen_len, vocab_size)
         # print("Shape của correction_output:", correction_output.shape)
 
-        # detection_output = self.detection_layer(word_level_output)
+        detection_output = tf.squeeze(self.detection_layer(word_level_output), axis=-1)  # (batch_size, max_sen_len)
         # print("Shape của detection_output:", detection_output.shape)
 
-        return correction_output
+        return correction_output, detection_output
 
 
 def custom_loss(y_true, y_pred):
-    print('Find loss:')
-    print("Shape y_true:", y_true.shape)
-    print("Shape y_pred:", y_pred.shape)
-    softmax_loss = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=False)(y_true, y_pred)
-    print('loss = ', softmax_loss)
-    # sigmoid_loss = tf.keras.losses.BinaryCrossentropy(from_logits=False)(y_true, y_pred[1])
-    total_loss = softmax_loss
+    print('y_pred shape:', y_pred.shape)
+    print('y_true shape:', y_true.shape)
+    true_outputs, true_detection_infos = y_true[0], y_true[1]
+    pred_outputs, pred_detection_infos = y_pred[0], y_pred[1]
+    print("pred_detect_shape ", pred_detection_infos)
+    print("true_detect_shape ", true_detection_infos)
+    softmax_loss = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=False)(true_outputs, pred_outputs)
+    sigmoid_loss = tf.keras.losses.BinaryCrossentropy(from_logits=False)(true_detection_infos, pred_detection_infos)
+    total_loss = softmax_loss + sigmoid_loss
     return total_loss
