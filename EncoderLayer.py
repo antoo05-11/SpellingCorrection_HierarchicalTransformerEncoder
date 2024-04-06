@@ -4,11 +4,11 @@ import tensorflow as tf
 
 
 class EncoderLayer(tf.keras.layers.Layer):
-    def __init__(self, *, d_model, num_heads, dff, dropout_rate=0.1):
+    def __init__(self, *, d_model, num_heads, dff, dropout_rate=0.1, name='EncoderLayer'):
         super().__init__()
 
         self.self_attention = GlobalSelfAttention(
-            num_heads=num_heads, key_dim=d_model, dropout=dropout_rate
+            num_heads=num_heads, key_dim=d_model, dropout=dropout_rate, name=name
         )
 
         self.ffn = FeedForward(d_model, dff)

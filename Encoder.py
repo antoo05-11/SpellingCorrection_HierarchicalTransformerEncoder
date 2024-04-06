@@ -15,7 +15,8 @@ def create_padding_mask(input_tokens, actual_lengths):
 
 class Encoder(tf.keras.layers.Layer):
     def __init__(
-            self, *, num_layers, d_model, num_heads, dff, vocab_size, dropout_rate=0.1
+            self, *, num_layers, d_model, num_heads, dff, vocab_size, dropout_rate=0.1,
+            name='Encoder'
     ):
         super().__init__()
 
@@ -23,19 +24,19 @@ class Encoder(tf.keras.layers.Layer):
         self.num_layers = num_layers
         self.enc_layers = [
             EncoderLayer(
-                d_model=d_model, num_heads=num_heads, dff=dff, dropout_rate=dropout_rate
+                d_model=d_model, num_heads=num_heads, dff=dff,
+                dropout_rate=dropout_rate,
+                name=f'encoder_layer_{i + 1}'
             )
-            for _ in range(num_layers)
+            for i in range(num_layers)
         ]
         # self.dropout = tf.keras.layers.Dropout(dropout_rate)
 
     def call(self, inputs):
-        # `x` is token-IDs shape: (batch, seq_len)
-        # x = self.pos_embedding(x)  # Shape `(batch_size, seq_len, d_model)`.
-        # Add dropout.
+
         x, lengths = inputs
         mask = create_padding_mask(x, lengths)
-        print(mask.shape)
+
         for i in range(self.num_layers):
             inputs = self.enc_layers[i]((x, mask))
 

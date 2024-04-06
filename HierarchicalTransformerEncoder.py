@@ -20,20 +20,24 @@ class HierarchicalTransformerEncoder(tf.keras.models.Model):
                                                d_model=character_level_d_model,
                                                num_heads=num_heads, dff=dff,
                                                vocab_size=character_vocab_size,
-                                               dropout_rate=dropout_rate)
+                                               dropout_rate=dropout_rate,
+                                               name='character_level_encoder')
 
-        self.flatten_layer = tf.keras.layers.Flatten(input_shape=(max_word_length, character_level_d_model))
-        self.linear_layer = tf.keras.layers.Dense(units=word_level_d_model, activation=None)
+        self.flatten_layer = tf.keras.layers.Flatten(input_shape=(max_word_length, character_level_d_model),
+                                                     name='flatten_character_level_encoders')
+        self.linear_layer = tf.keras.layers.Dense(units=word_level_d_model, activation=None,
+                                                  name='linear_character_level_encoders')
 
-        self.combined_layer = tf.keras.layers.Concatenate(axis=-1)
+        self.combined_layer = tf.keras.layers.Concatenate(axis=-1, name='combined_character_and_word_level_encoders')
 
         self.word_level_encoder = Encoder(num_layers=num_word_level_layers,
                                           d_model=(word_level_d_model * 2),
                                           num_heads=num_heads, dff=dff,
                                           vocab_size=vocab_size,
-                                          dropout_rate=dropout_rate)
+                                          dropout_rate=dropout_rate,
+                                          name='word_level_encoder')
 
-        self.correction_layer = tf.keras.layers.Dense(vocab_size, activation='softmax')
+        self.correction_layer = tf.keras.layers.Dense(vocab_size, activation='softmax', name='correction_layer',)
         # self.detection_layer = tf.keras.layers.Dense(1, activation='sigmoid')
 
     def call(self, inputs):
