@@ -13,7 +13,7 @@ class EncoderLayer(tf.keras.layers.Layer):
 
         self.ffn = FeedForward(d_model, dff)
 
-    def call(self, x):
-        x = self.self_attention(x)
+    def call(self, inputs):
+        x = self.self_attention(inputs)
         x = self.ffn(x)
         return x

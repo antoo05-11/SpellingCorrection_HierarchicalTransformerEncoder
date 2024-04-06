@@ -22,27 +22,30 @@ class HierarchicalTransformerEncoder(tf.keras.models.Model):
                                                vocab_size=character_vocab_size,
                                                dropout_rate=dropout_rate)
 
+        self.flatten_layer = tf.keras.layers.Flatten(input_shape=(max_word_length, character_level_d_model))
+        self.linear_layer = tf.keras.layers.Dense(units=word_level_d_model, activation=None)
+
+        self.combined_layer = tf.keras.layers.Concatenate(axis=-1)
+
         self.word_level_encoder = Encoder(num_layers=num_word_level_layers,
                                           d_model=(word_level_d_model * 2),
                                           num_heads=num_heads, dff=dff,
                                           vocab_size=vocab_size,
                                           dropout_rate=dropout_rate)
-        self.flatten_layer = tf.keras.layers.Flatten(input_shape=(max_word_length, character_level_d_model))
-        self.linear_layer = tf.keras.layers.Dense(units=word_level_d_model, activation=None)
 
-        self.combined_layer = tf.keras.layers.Concatenate(axis=-1)
         self.correction_layer = tf.keras.layers.Dense(vocab_size, activation='softmax')
         # self.detection_layer = tf.keras.layers.Dense(1, activation='sigmoid')
 
     def call(self, inputs):
-        word_level_inputs, character_level_inputs = inputs
-        # print("Shape của word_level_inputs:", word_level_inputs.shape)
+        (word_level_inputs, sentences_lengths), (character_level_inputs, words_lengths) = inputs
+
         word_embedding_outputs = self.word_pos_embedding(word_level_inputs)
         # print("Shape của word_embedding_outputs:", word_embedding_outputs.shape)
 
         character_level_encoder_outputs = tf.map_fn(
-            lambda sentence: self.character_level_encoder(self.character_pos_embedding(sentence)),
-            character_level_inputs,
+            lambda sentence: self.character_level_encoder(
+                (self.character_pos_embedding(sentence[0]), sentence[1])),
+            (character_level_inputs, words_lengths),
             dtype=tf.float32
         )
 
@@ -60,7 +63,7 @@ class HierarchicalTransformerEncoder(tf.keras.models.Model):
         concat_output = self.combined_layer([word_embedding_outputs, character_level_encoder_outputs])
         # print("Shape của concat_output:", concat_output.shape)
 
-        word_level_output = self.word_level_encoder(concat_output)
+        word_level_output = self.word_level_encoder((concat_output, sentences_lengths))
         # print("Shape của word_level_output:", word_level_output.shape)
 
         correction_output = self.correction_layer(word_level_output)
