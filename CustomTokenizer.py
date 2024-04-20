@@ -1,5 +1,11 @@
+import json
+
+from utils import write_dict_data_to_file
+
+
 class CustomTokenizer:
-    def __init__(self, word_vocab_size, max_word_len, max_sentence_len):
+
+    def __init__(self, word_vocab_size=0, max_word_len=0, max_sentence_len=0):
         self.index_word = {1: '[UNK]'}
         self.word_count = {'[UNK]': 1}
         self.word_index = {'[UNK]': 1}
@@ -8,7 +14,8 @@ class CustomTokenizer:
         self.character_index = {'[UNK]': 1}
         self.index_character = {1: '[UNK]'}
 
-        self.signs = [',', '.', '!', '\"', "\'", "?", ";", ")", "(", ':', "/", "+", "-", "=","`","~", "*", "^", "@", "%", "&", "_"]
+        self.signs = [',', '.', '!', '\"', "\'", "?", ";", ")", "(", ':', "/", "+", "-", "=", "`", "~", "*", "^", "@",
+                      "%", "&", "_"]
 
         self.max_word_len = max_word_len
         self.max_sentence_len = max_sentence_len
@@ -46,10 +53,8 @@ class CustomTokenizer:
             word_level_sequences.append(tokens)
 
             sentence_tokens = []
-            word_length = []
             for word in words:
                 tokens = [self.character_index.get(i, 1) for i in word]
-                word_length.append(min(len(tokens), self.max_word_len))
                 sentence_tokens.append(tokens)
             character_level_sequences.append(sentence_tokens)
 
@@ -82,3 +87,33 @@ class CustomTokenizer:
                 self.index_character[self.character_index[character]] = character
 
         self.sort()
+        self.save_tokenizer()
+
+    def save_tokenizer(self):
+        write_dict_data_to_file("model/tokenizer/word_index.json", self.word_index)
+        write_dict_data_to_file("model/tokenizer/index_word.json", self.index_word)
+        write_dict_data_to_file("model/tokenizer/index_character.json", self.index_character)
+        write_dict_data_to_file("model/tokenizer/character_index.json", self.character_index)
+        write_dict_data_to_file("model/tokenizer/config.json", {
+            'word_vocab_size': self.word_vocab_size,
+            'max_word_len': self.max_word_len,
+            'max_sentence_len': self.max_sentence_len,
+            'signs': self.signs
+        }, indent=4)
+
+    @staticmethod
+    def load_tokenizer():
+        instance = CustomTokenizer()
+
+        config = json.load(open('model/tokenizer/config.json'))
+        instance.word_vocab_size = config['word_vocab_size']
+        instance.max_word_len = config['max_word_len']
+        instance.max_sentence_len = config['max_sentence_len']
+        instance.signs = config['signs']
+
+        instance.word_index = json.load(open('model/tokenizer/word_index.json'))
+        instance.index_word = json.load(open('model/tokenizer/index_word.json'))
+        instance.character_index = json.load(open('model/tokenizer/character_index.json'))
+        instance.index_character = json.load(open('model/tokenizer/index_character.json'))
+
+        return instance

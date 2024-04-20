@@ -6,7 +6,7 @@ from CustomTokenizer import CustomTokenizer
 from Dataset import Dataset
 from HierarchicalTransformerEncoderModel import HierarchicalTransformerEncoderModel
 
-config = Config()
+config = Config().save_config()
 
 # Read data.
 data = pd.read_csv('data/vi_processed.csv')
@@ -51,4 +51,4 @@ model.fit(
     validation_data=([input_word_level_sequences[train_size:], input_character_level_sequences[train_size:]],
                      target_sequences[train_size:]))
 
-model.save('model.keras')
+model.save('model/model.keras')

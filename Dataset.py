@@ -2,6 +2,7 @@ import random
 from tensorflow.keras.preprocessing.sequence import pad_sequences
 import tensorflow as tf
 
+
 class Dataset:
     def __init__(self, sentences, tokenizer, config):
         self.sentences = sentences
