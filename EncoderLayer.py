@@ -17,3 +17,4 @@ class EncoderLayer(tf.keras.layers.Layer):
         x = self.self_attention(inputs)
         x = self.ffn(x)
         return x
+

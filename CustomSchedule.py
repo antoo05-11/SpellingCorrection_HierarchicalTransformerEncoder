@@ -1,6 +1,8 @@
 import tensorflow as tf
+from tensorflow import keras
 
 
+@keras.utils.register_keras_serializable()
 class CustomSchedule(tf.keras.optimizers.schedules.LearningRateSchedule):
     def __init__(self, d_model, warmup_steps=4000):
         super().__init__()
@@ -25,4 +27,4 @@ class CustomSchedule(tf.keras.optimizers.schedules.LearningRateSchedule):
 
     @classmethod
     def from_config(cls, config):
-        return cls(d_model=config['d_model'], warmup_steps=config['warmup_steps'])
+        return cls(**config)

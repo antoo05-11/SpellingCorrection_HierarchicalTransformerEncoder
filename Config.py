@@ -1,20 +1,20 @@
 class Config:
     def __init__(self):
         self.BATCH_SIZE = 50
-        self.EPOCHS = 10
-        self.NUM_OF_INPUTS = 150
+        self.EPOCHS = 30
+        self.NUM_OF_INPUTS = 1000
 
-        self.NUM_CHARACTER_LEVEL_LAYERS = 3
-        self.NUM_WORD_LEVEL_LAYERS = 6
+        self.NUM_CHARACTER_LEVEL_LAYERS = 4
+        self.NUM_WORD_LEVEL_LAYERS = 12
 
-        self.CHARACTER_LEVEL_D_MODEL = 32
-        self.WORD_LEVEL_D_MODEL = 128
+        self.CHARACTER_LEVEL_D_MODEL = 64
+        self.WORD_LEVEL_D_MODEL = 512
 
         self.NUM_HEADS = 3
-        self.DFF = 128
+        self.DFF = 256
 
-        self.MAX_WORD_LENGTH = 10
-        self.MAX_SENTENCE_LENGTH = 40
+        self.MAX_WORD_LENGTH = 16
+        self.MAX_SENTENCE_LENGTH = 64
 
-        self.VOCAB_SIZE = 10000
-        self.CHARACTER_VOCAB_SIZE = 20000
+        self.VOCAB_SIZE = 5000
+        self.CHARACTER_VOCAB_SIZE = 500
