@@ -12,15 +12,14 @@ config = Config().save_config()
 data = pd.read_csv('data/vi_processed.csv')
 input_sentences = []
 for index, row in data.iterrows():
-    if len(input_sentences) == config.NUM_OF_INPUTS: break
     input_sentences.append(row.correct_text)
-correct_texts = input_sentences[:config.NUM_OF_INPUTS]
 
 # Preprocessing and build dataset.
 word_level_tokenizer = CustomTokenizer(word_vocab_size=config.VOCAB_SIZE, max_word_len=config.MAX_WORD_LENGTH,
                                        max_sentence_len=config.MAX_SENTENCE_LENGTH)
-word_level_tokenizer.fit_on_texts(input_sentences[:20000])
+word_level_tokenizer.fit_on_texts(input_sentences)
 
+input_sentences = input_sentences[:config.NUM_OF_INPUTS]
 dataset = Dataset(input_sentences, word_level_tokenizer, config)
 data = dataset.build_dataset()
 

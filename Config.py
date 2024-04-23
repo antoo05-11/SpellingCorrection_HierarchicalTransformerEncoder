@@ -5,23 +5,23 @@ from utils import write_dict_data_to_file
 
 class Config:
     def __init__(self):
-        self.BATCH_SIZE = 200
-        self.EPOCHS = 30
-        self.NUM_OF_INPUTS = 20000
+        self.BATCH_SIZE = 100
+        self.EPOCHS = 20
+        self.NUM_OF_INPUTS = 50000
 
         self.NUM_CHARACTER_LEVEL_LAYERS = 4
         self.NUM_WORD_LEVEL_LAYERS = 12
 
         self.CHARACTER_LEVEL_D_MODEL = 64
-        self.WORD_LEVEL_D_MODEL = 768
+        self.WORD_LEVEL_D_MODEL = 512
 
-        self.NUM_HEADS = 6
+        self.NUM_HEADS = 3
         self.DFF = 256
 
         self.MAX_WORD_LENGTH = 8
         self.MAX_SENTENCE_LENGTH = 64
 
-        self.VOCAB_SIZE = 10000
+        self.VOCAB_SIZE = 8000
         self.CHARACTER_VOCAB_SIZE = 500
 
     def save_config(self):

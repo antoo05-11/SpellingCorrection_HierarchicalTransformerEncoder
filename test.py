@@ -1,8 +1,16 @@
 from Config import Config
 from CustomTokenizer import CustomTokenizer
 import tensorflow as tf
-
+from HierarchicalTransformerEncoderModel import HierarchicalTransformerEncoderModel
+from BaseAttention import BaseAttention
+from GlobalSelfAttention import GlobalSelfAttention
+from CustomSchedule import CustomSchedule
+from CustomTokenizer import CustomTokenizer
 from Dataset import Dataset
+from Encoder import Encoder
+from EncoderLayer import EncoderLayer
+from FeedForward import FeedForward
+from PositionalEmbedding import PositionalEmbedding, positional_encoding
 
 tokenizer = CustomTokenizer.load_tokenizer()
 loaded_model = tf.keras.models.load_model('model/model.keras')
@@ -15,7 +23,7 @@ def print_outputs(outputs):
         out = ''
         for word in sentence:
             max_index = tf.argmax(word, axis=0).numpy()
-            word_str = tokenizer.index_word.get(max_index)
+            word_str = tokenizer.index_word.get(str(max_index))
             if word_str is not None:
                 out += word_str + ' '
             else:
