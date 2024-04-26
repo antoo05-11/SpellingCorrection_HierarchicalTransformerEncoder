@@ -8,10 +8,12 @@ import six
 class Tokenizer(object):
   """Runs end-to-end tokenziation."""
 
-  def __init__(self, vocab_file, do_lower_case=True):
+  def __init__(self, vocab_file, unk_token = "[UNK]", do_lower_case = True, char_level = False):
     self.vocab = load_vocab(vocab_file)
     self.inv_vocab = {v: k for k, v in self.vocab.items()}
     self.do_lower_case = do_lower_case
+    self.char_level = char_level
+    self.unk_token = unk_token
   def tokenize(self, text):
     text = convert_to_unicode(text)
     text = self._clean_text(text)
@@ -28,8 +30,10 @@ class Tokenizer(object):
       if self.do_lower_case:
         token = token.lower()
       split_tokens.extend(self._run_split_on_punc(token))
-    output_tokens = whitespace_tokenize(" ".join(split_tokens))
-    return output_tokens
+    if self.char_level: 
+      return [[char if char in self.vocab else self.unk_token for char in token] for token in whitespace_tokenize(" ".join(split_tokens))]
+    if not self.char_level: 
+      return [token if token in self.vocab else self.unk_token for token in whitespace_tokenize(" ".join(split_tokens))]
 
   def _clean_text(self, text):
     """Performs invalid character removal and whitespace cleanup on text."""
@@ -76,19 +80,16 @@ def convert_by_vocab(vocab, items):
   """Converts a sequence of [tokens|ids] using the vocab."""
   output = []
   for item in items:
-    if item == "" : continue
-    if item not in vocab:
-      print(items)
-      continue
     output.append(vocab[item])
   return output
+
 
 
 def load_vocab(vocab_file):
   """Loads a vocabulary file into a dictionary."""
   vocab = collections.OrderedDict()
   index = 0
-  with tf.gfile.GFile(vocab_file, "r") as reader:
+  with tf.io.gfile.GFile(vocab_file, "r") as reader:
     while True:
       token = convert_to_unicode(reader.readline())
       if not token:

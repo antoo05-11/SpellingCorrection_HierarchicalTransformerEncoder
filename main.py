@@ -4,26 +4,47 @@ from Config import Config
 from CustomSchedule import CustomSchedule
 from CustomTokenizer import CustomTokenizer
 from Dataset import Dataset
+from DataTrain import DataSet
 from HierarchicalTransformerEncoderModel import HierarchicalTransformerEncoderModel
+from Tokenizer import CreateVocab, Tokenizer
+import tempfile
+import six
 
 config = Config().save_config()
 
+
 # Read data.
-data = pd.read_csv('data/vi_processed.csv')
-input_sentences = []
-for index, row in data.iterrows():
-    input_sentences.append(row.correct_text)
+data = pd.read_csv("data/vi_processed.csv")["correct_text"]
+create_vocab = CreateVocab(special_token=['[PAD]', '[MASK]','[UNK]'])
+word_vocab = create_vocab.create_word_vocab(file_text=data, vocab_size=config.VOCAB_SIZE)
+char_vocab = create_vocab.create_character_vocab(file_text=data)
+with tempfile.NamedTemporaryFile(delete=False) as word_vocab_writer:
+    if six.PY2:
+        word_vocab_writer.write("".join([x + "\n" for x in word_vocab]))
+    else:
+        word_vocab_writer.write("".join(
+            [x + "\n" for x in word_vocab]).encode("utf-8"))
 
-# Preprocessing and build dataset.
-word_level_tokenizer = CustomTokenizer(word_vocab_size=config.VOCAB_SIZE, max_word_len=config.MAX_WORD_LENGTH,
-                                       max_sentence_len=config.MAX_SENTENCE_LENGTH)
-word_level_tokenizer.fit_on_texts(input_sentences)
+        word_vocab_file = word_vocab_writer.name
 
-input_sentences = input_sentences[:config.NUM_OF_INPUTS]
-dataset = Dataset(input_sentences, word_level_tokenizer, config)
-data = dataset.build_dataset()
+with tempfile.NamedTemporaryFile(delete=False) as char_vocab_writer:
+    if six.PY2:
+        char_vocab_writer.write("".join([x + "\n" for x in char_vocab]))
+    else:
+        char_vocab_writer.write("".join(
+            [x + "\n" for x in char_vocab]).encode("utf-8"))
 
-(input_word_level_sequences, input_character_level_sequences), target_sequences = data
+        char_vocab_file = char_vocab_writer.name
+
+
+word_level_tokenizer = Tokenizer(vocab_file=word_vocab_file)
+char_level_tokenizer = Tokenizer(vocab_file=char_vocab_file, char_level=True)
+
+
+input_sentences = data[:config.NUM_OF_INPUTS]
+dataset = DataSet(word_tokenizer=word_level_tokenizer, char_tokenizer=char_level_tokenizer,max_seq_length=config.MAX_SENTENCE_LENGTH, max_word_length=config.MAX_WORD_LENGTH)
+
+(target_sequences, input_word_level_sequences, input_character_level_sequences) = dataset.create_data_train(input_sentences)
 
 # Build and train model.
 model = HierarchicalTransformerEncoderModel(num_character_level_layers=config.NUM_CHARACTER_LEVEL_LAYERS,

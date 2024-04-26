@@ -8,10 +8,18 @@ from tensorflow import keras
 
 @keras.utils.register_keras_serializable()
 class HierarchicalTransformerEncoderModel(tf.keras.models.Model):
-    def __init__(self, *, num_character_level_layers, num_word_level_layers,
-                 character_level_d_model, word_level_d_model, num_heads, dff,
-                 max_word_length, max_sentence_length,
-                 vocab_size, character_vocab_size, dropout_rate=0.1, **kwargs):
+    def __init__(self, *, 
+                 num_character_level_layers, 
+                 num_word_level_layers,
+                 character_level_d_model, 
+                 word_level_d_model, 
+                 num_heads, 
+                 dff,
+                 max_word_length, 
+                 max_sentence_length,
+                 vocab_size, 
+                 character_vocab_size, 
+                 dropout_rate=0.1, **kwargs):
         super(HierarchicalTransformerEncoderModel, self).__init__(**kwargs)
 
         self.num_character_level_layers = num_character_level_layers
